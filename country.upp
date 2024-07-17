@@ -1,0 +1,20 @@
+-- function to eliminate adjectives and inhabitants of countries
+-- c is a string matched as a country or city
+
+function country(c)
+
+    -- singluar masculin
+    if (c:match"ais$" or c:match"ain$" or c:match"ien$") then return false 
+
+    -- singular feminin
+    elseif (c:match"aise$" or c:match"ainne$" or c:match"ienne$") then return false 
+
+    -- plural masculin
+    elseif (c:match"ains$" or c:match"iens$") then return false 
+
+    -- plural feminin
+    elseif (c:match"aises$" or c:match"ainnes$" or c:match"iennes$") then return false end
+
+    return true
+
+end

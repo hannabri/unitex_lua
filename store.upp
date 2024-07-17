@@ -1,0 +1,59 @@
+-- Functions to resolve the problem that some sequences are both in "Person" and "~Organization"
+-- the first function is supposed to recognize the names and store them in a file
+-- the second function checks if the matched sequence is already present in the matched names
+-- Problem: Inside of Unitex, it is not possible to write into a file (at least not like defined below)
+
+-- n is a string matched to be a name
+-- e is a string matched to be a organization
+
+names = {}
+i = 1
+path = "C:\\Users\\brinkman\\Documents\\elg\\concord.html"
+
+function store_names(n)
+
+    -- supposed to store the matched names in a file (doesn't word inside of Unitex!)
+
+    -- appends the name at the end of the list (at the i-th position)
+    names[i] = n
+    i = i+1
+    print("Name appended!")
+
+    -- save the names in a file
+    file = io.open(path, "w")
+    print("File opened!")
+
+    for c,e in pairs(names) do
+
+        print("Name number "..c)
+        file:write(e.." ")
+        print("Name written!")
+
+    end
+
+    file:close()
+
+    return true
+
+end
+
+
+function new_element(e)
+
+    -- resolve the problem that names are both in "Person" and "~Organization"
+    -- checks if the matched sequence is already present in the "Person" category
+
+    -- read the names stored in the file
+    r_file = io.open(path, "r")
+    dec_names = r_file:read("a")
+    r_file:close()
+
+    -- if a match is found, it will return false --> the element is not new
+    if dec_names:lower():match(e:lower()) then
+        return false
+    end
+
+    -- returns true if no match is found --> the element is new
+    return true
+
+end

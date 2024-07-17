@@ -1,0 +1,4 @@
+def print_stuff(word):
+
+    if len(word) > 4: print(f"Word length: {len(word)}")
+    else: print("small word!")

@@ -1,0 +1,199 @@
+local http = require("socket.http")
+
+-- variables with category, number, genre etc. 
+
+
+--number = {"singulier", "pluriel"}
+
+
+function get_number(text, word)
+  -- returns the possible number(s) for the word : table. 
+  -- text : string is the content of the get request
+  -- word : string is the word that was given
+  number = {"singulier", "pluriel"}
+
+  possible_number = {}
+  final_nb = {}
+
+  -- look for singular / plural information in a table
+  sp = '<table class="flextable flextable%-fr%-mfsp">[%s\n]*<tbody><tr>([<%w>\n%s/]*)</tr>'
+
+  for m in string.gmatch(text, sp) do
+
+    for _,n in pairs(number) do
+      if m:lower():match(n) then 
+        possible_number[#possible_number+1] = n 
+      end
+    end
+  end
+
+  for _,pn in pairs(possible_number) do
+    print("Number: "..pn)
+  end
+
+  -- depending on which of the matches equals the given word, the number is set to singular or plural or both (for invariable words)
+  mf = '<td><b[%w<>%s]*lang="fr" class="lang%-fr"><[%w""=<>/#%s%p]->(%w+)</[%w<>/]*>[%s\n]*</td>'
+
+  i = 1
+  match = 1
+  for m in text:gmatch(mf) do
+    print("Word match: "..m)
+
+    if match > #possible_number then break
+    elseif m == word then
+      match = match+1
+      final_nb[#final_nb+1] = number[i]:sub(1,1)
+    else
+      match = match+1
+      i = i+1
+    end
+  end
+
+  return final_nb
+
+end
+
+
+
+function get_genre(text)
+  -- returns possible genres for the given word : table
+  -- text : string is the content of the get request
+
+  genre = {"féminin", "masculin"}
+
+  infos = "<span class=\"ligne%-de%-forme\"><i>([%wéçèê%s]*)</i></span>"
+  --contexte = "<span class=\"API\" title=\"Prononciation API\">\\[%aɔ̃ɛ%pʁ]*\\</span></a>"
+  pattern_gn = infos
+
+  possible_genre = {}
+
+  for g in text:gmatch(pattern_gn) do
+
+    for i=1,#genre,1 do
+
+      if g:match(genre[i]) then
+        possible_genre[genre[i]] = true
+      end
+
+    end
+
+  end
+
+  for k,v in pairs(possible_genre) do
+    print("Genre: "..k)
+  end
+
+  return possible_genre
+
+end
+
+
+function get_word_category(text)
+  -- returns possible word categories for the given word : table
+  -- text : string is the content of the get request
+
+  word_categories = {"nom", "adjectif", "adverbe", "verbe"}
+
+  pattern_cat = 'id="toc-[%a%p]-sublist"'
+  possible_categories = {}
+
+
+  for w in text:gmatch(pattern_cat) do
+
+    for _,c in pairs(word_categories) do
+
+      if w:lower():match(c) then
+        possible_categories[c] = true
+      end
+
+    end
+
+  end
+
+  return possible_categories
+
+end
+
+
+
+function easy_lookUp(word)
+  -- main function for the lookup
+  -- prints the possible codes with Unitex standards
+  -- word : string is the unknown word
+
+  print("Look Up for the word "..word)
+end
+
+function rest(word)
+  path = "https://fr.wiktionary.org/wiki/"..word
+  print("Website: "..path.."\n")
+
+  content = http.request(path)
+
+  -- handle the case where Wiktionary has no results for the word
+  if content:match("Pas de résultat pour <b>"..word.."</b>") then 
+    print("We couldn't find the word on Wiktionary") 
+    return nil
+  end
+
+  --search for possible word category
+  possible_categories = get_word_category(content)
+
+  -- search for possible genre
+  possible_genre = get_genre(content)
+
+  -- search for possible number
+  possible_number = get_number(content, word)
+
+  -- Count the number of keys in possible_number
+  local genre_number = 0
+  for _ in pairs(possible_genre) do
+    genre_number = genre_number + 1
+  end
+
+  -- build the final code with the pattern: First Letter of the category + ":" + first letter of genre and number
+  final_code = {}
+
+  for c,_ in pairs(possible_categories) do
+    code = c:upper():sub(1,1)
+
+    if code == "V" then 
+      code = code -- handle the special case of verbs
+
+    elseif genre_number < 1 then
+      final_code[#final_code+1] = code -- if no genre is found
+
+    else
+
+      for g in pairs(possible_genre) do
+
+        if #possible_number <1 then final_code[#final_code+1] = code..":"..g:sub(1,1) -- if no number is found
+        else
+
+          for _,n in pairs(possible_number) do
+
+            code = code..":"..g:sub(1,1)..n
+
+          end
+
+        end
+
+      end
+
+    end
+
+    final_code[#final_code+1] = code
+  end
+
+  -- print all final codes
+  print("\n")
+  for _,j in pairs(final_code) do
+    print(j)
+  end
+
+
+end
+
+easy_lookUp("rapide")
+
+
