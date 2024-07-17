@@ -195,6 +195,6 @@ function rest(word)
 end
 
 -- Doesn't work -- require("socket) blocks the execution in unitex and it is not able to fetch the content (or read / save a file) outside of unitex!
-easy_lookUp("rapide")
+-- graph : test_lookUp.grf
 
 
