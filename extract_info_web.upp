@@ -50,10 +50,6 @@ function get_number(text, word)
     end
   end
 
-  for _,pn in pairs(possible_number) do
-    -- print("Number: "..pn)
-  end
-
   -- depending on which of the matches equals the given word, the number is set to singular or plural or both (for invariable words)
   mf = '<td><b[%w<>%s]*lang="fr" class="lang%-fr"><[%w""=<>/#%s%p]->(%w+)</[%w<>/]*>[%s\n]*</td>'
 
@@ -100,10 +96,6 @@ function get_genre(text)
 
   end
 
-  for k,v in pairs(possible_genre) do
-    -- print("Genre: "..k)
-  end
-
   return possible_genre
 
 end
@@ -138,7 +130,7 @@ function get_word_category(text)
 end
 
 function get_verb_tags(text)
-  -- returns the final code for the verbe . table
+  -- returns the final code for the verbe : table
   -- text : string is the content of the website
 
   -- looks for tense and aspect information in a table, the first group is the aspect and the second the tense
@@ -147,8 +139,6 @@ function get_verb_tags(text)
   pattern_pers = "<td>([%a%é]*)"
 
   for f,t  in text:gmatch(pattern_conj) do
-    -- print("Forme: "..f)
-    -- print("Tense: "..t)
 
     code = code..":"..verb_tags[f:lower().." "..t:lower()]
 
@@ -165,10 +155,10 @@ function get_verb_tags(text)
 end
 
 
-
+-- main function to look up the word, the one to use with unitex --> $@extract_info_web.easy_lookUp(${variable})$
 function easy_lookUp(word)
   -- main function for the lookup
-  -- prints the possible codes with Unitex standards
+  -- returns the possible codes with Unitex standards
   -- word : string is the unknown word
 
   print("Look Up for the word "..word)
@@ -239,9 +229,8 @@ function easy_lookUp(word)
     print(c.."\t"..j)
   end
 
+  return final_code
 
 end
-
-easy_lookUp("intéressant")
 
 
