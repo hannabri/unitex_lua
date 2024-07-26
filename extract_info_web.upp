@@ -1,16 +1,39 @@
 local http = require("socket.http")
 
 -- variables with category, number, genre etc. 
+word_categories = {"nom", "adjectif", "adverbe", "verbe"}
+genre = {"féminin", "masculin"}
+number = {"singulier", "pluriel"}
+verb_tags = {
+  ["indicatif présent"]= "P",
+  ["indicatif imparfait"] = "I",
+  ["subjonctif présent"] = "S",
+  ["subjonctif imparfait"] = "T",
+  ["impératif présent"] = "Y",
+  ["conditionnel présent"] = "C",
+  ["passé simple"] = "J",
+  ["infinitif"] = "W",
+  ["participe présent"] = "G",
+  ["partifipe passé"] = "K",
+  ["futur"] = "F"
+}
+person = {
+  ["je"] = "1s",
+  ["tu"] = "2s",
+  ["il"] = "3s",
+  ["elle"] = "3s",
+  ["nous"] = "1p",
+  ["vous"] = "2p",
+  ["ils"] = "3p",
+  ["elles"] = "3p",
+}
 
-
---number = {"singulier", "pluriel"}
 
 
 function get_number(text, word)
   -- returns the possible number(s) for the word : table. 
   -- text : string is the content of the get request
   -- word : string is the word that was given
-  number = {"singulier", "pluriel"}
 
   possible_number = {}
   final_nb = {}
@@ -18,17 +41,17 @@ function get_number(text, word)
   -- look for singular / plural information in a table
   sp = '<table class="flextable flextable%-fr%-mfsp">[%s\n]*<tbody><tr>([<%w>\n%s/]*)</tr>'
 
-  for m in string.gmatch(text, sp) do
+  for m in text:gmatch(sp) do
 
     for _,n in pairs(number) do
       if m:lower():match(n) then 
-        possible_number[#possible_number+1] = n 
+        possible_number[#possible_number+1] = n
       end
     end
   end
 
   for _,pn in pairs(possible_number) do
-    print("Number: "..pn)
+    -- print("Number: "..pn)
   end
 
   -- depending on which of the matches equals the given word, the number is set to singular or plural or both (for invariable words)
@@ -37,8 +60,7 @@ function get_number(text, word)
   i = 1
   match = 1
   for m in text:gmatch(mf) do
-    print("Word match: "..m)
-
+    -- print("Word match: "..m)
     if match > #possible_number then break
     elseif m == word then
       match = match+1
@@ -59,7 +81,6 @@ function get_genre(text)
   -- returns possible genres for the given word : table
   -- text : string is the content of the get request
 
-  genre = {"féminin", "masculin"}
 
   infos = "<span class=\"ligne%-de%-forme\"><i>([%wéçèê%s]*)</i></span>"
   --contexte = "<span class=\"API\" title=\"Prononciation API\">\\[%aɔ̃ɛ%pʁ]*\\</span></a>"
@@ -80,7 +101,7 @@ function get_genre(text)
   end
 
   for k,v in pairs(possible_genre) do
-    print("Genre: "..k)
+    -- print("Genre: "..k)
   end
 
   return possible_genre
@@ -92,17 +113,19 @@ function get_word_category(text)
   -- returns possible word categories for the given word : table
   -- text : string is the content of the get request
 
-  word_categories = {"nom", "adjectif", "adverbe", "verbe"}
 
-  pattern_cat = 'id="toc-[%a%p]-sublist"'
+  pattern_cat = 'id="toc%-([%l%u_%ç]*)%-sublist"'
   possible_categories = {}
 
 
   for w in text:gmatch(pattern_cat) do
 
     for _,c in pairs(word_categories) do
+      pattern_match_endstring = "("..c..")$"
 
-      if w:lower():match(c) then
+      if w:lower():match(c.."_") then
+        possible_categories[c] = true
+      elseif w:lower():match(pattern_match_endstring) then
         possible_categories[c] = true
       end
 
@@ -114,6 +137,33 @@ function get_word_category(text)
 
 end
 
+function get_verb_tags(text)
+  -- returns the final code for the verbe . table
+  -- text : string is the content of the website
+
+  -- looks for tense and aspect information in a table, the first group is the aspect and the second the tense
+  pattern_conj = "<b>([%l%u]*)</b>[\n]?</td>[\n]?<td [%l%=\"#%u%s%d%:]*>[%s]*<b>(%u[%a%é]*)[%s]*</b>[\n]?</td>"
+  -- looks for person information
+  pattern_pers = "<td>([%a%é]*)"
+
+  for f,t  in text:gmatch(pattern_conj) do
+    -- print("Forme: "..f)
+    -- print("Tense: "..t)
+
+    code = code..":"..verb_tags[f:lower().." "..t:lower()]
+
+    -- checks if a person is given, if yes it appends it to the existing code
+    for p in text:gmatch(pattern_pers) do
+      if person[p] ~= nil then
+        code = code..":"..person[p]
+      end
+    end
+
+  end
+  return (code)
+
+end
+
 
 
 function easy_lookUp(word)
@@ -122,9 +172,7 @@ function easy_lookUp(word)
   -- word : string is the unknown word
 
   print("Look Up for the word "..word)
-end
 
-function rest(word)
   path = "https://fr.wiktionary.org/wiki/"..word
   print("Website: "..path.."\n")
 
@@ -136,65 +184,64 @@ function rest(word)
     return nil
   end
 
+  -- build the final code with the pattern: First Letter of the category + ":" + first letter of genre and number
+  final_code = {}
   --search for possible word category
   possible_categories = get_word_category(content)
 
-  -- search for possible genre
-  possible_genre = get_genre(content)
+  for pc,_ in pairs(possible_categories) do
+    -- print("Category: "..pc)
 
-  -- search for possible number
-  possible_number = get_number(content, word)
+    code = pc:upper():sub(1,1)
 
-  -- Count the number of keys in possible_number
-  local genre_number = 0
-  for _ in pairs(possible_genre) do
-    genre_number = genre_number + 1
-  end
+    if pc == "nom" or pc == "adjectif" then
 
-  -- build the final code with the pattern: First Letter of the category + ":" + first letter of genre and number
-  final_code = {}
+      -- search for possible genre
+      possible_genre = get_genre(content)
 
-  for c,_ in pairs(possible_categories) do
-    code = c:upper():sub(1,1)
+      -- search for possible number
+      possible_number = get_number(content, word)
 
-    if code == "V" then 
-      code = code -- handle the special case of verbs
-
-    elseif genre_number < 1 then
-      final_code[#final_code+1] = code -- if no genre is found
-
-    else
-
-      for g in pairs(possible_genre) do
-
-        if #possible_number <1 then final_code[#final_code+1] = code..":"..g:sub(1,1) -- if no number is found
-        else
-
-          for _,n in pairs(possible_number) do
-
-            code = code..":"..g:sub(1,1)..n
-
-          end
-
-        end
-
+      -- Count the number of keys in possible_number
+      local genre_number = 0
+      for _ in pairs(possible_genre) do
+        genre_number = genre_number + 1
       end
 
-    end
+      if genre_number < 1 then
+        final_code[#final_code+1] = code -- if no genre is found
+        break
+      else
+
+        for g in pairs(possible_genre) do
+          -- print("Match: "..g)
+
+          if #possible_number <1 then final_code[#final_code+1] = code..":"..g:sub(1,1) -- if no number is found
+          else
+
+            for _,n in pairs(possible_number) do
+              code = code..":"..g:sub(1,1)..n
+            end
+          end
+        end
+      end
 
     final_code[#final_code+1] = code
+
+    elseif pc == "verbe" then
+      final_code[#final_code+1] = get_verb_tags(content)
+    end
   end
 
   -- print all final codes
   print("\n")
-  for _,j in pairs(final_code) do
-    print(j)
+  for c,j in pairs(final_code) do
+    print(c.."\t"..j)
   end
 
 
 end
 
--- Doesn't work -- require("socket) blocks the execution in unitex and it is not able to fetch the content (or read / save a file) outside of unitex!
--- graph : test_lookUp.grf
+easy_lookUp("intéressant")
 
 
