@@ -1,3 +1,4 @@
+-- Author: Hanna Brinkmann
 -- Functions to resolve the problem that some sequences are both in "Person" and "~Organization"
 -- the first function is supposed to recognize the names and store them in a file
 -- the second function checks if the matched sequence is already present in the matched names

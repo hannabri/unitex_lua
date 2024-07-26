@@ -1,3 +1,4 @@
+-- Author: Hanna Brinkmann (dans le cadre du stage)
 -- function to eliminate adjectives and inhabitants of countries
 -- c is a string matched as a country or city
 

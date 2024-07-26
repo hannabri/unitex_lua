@@ -1,3 +1,5 @@
+-- Author: Hanna Brinkmann (dans le cadre du stage)
+
 local http = require("socket.http")
 
 -- variables with category, number, genre etc. 

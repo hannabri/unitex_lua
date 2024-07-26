@@ -1,4 +1,10 @@
+-- Author: Hanna Brinkmann
+-- calculates the length of the word
+
 def print_stuff(word):
+    -- word : string, input word for which the length is calculated
+    -- prints 'small word' if shorter than 4 letters
+    -- prints word legth if 4 letters or more
 
     if len(word) > 4: print(f"Word length: {len(word)}")
     else: print("small word!")

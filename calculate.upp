@@ -1,3 +1,4 @@
+-- Author: Cristian Martinez (dans sa thèse)
 -- Extended function to return the result of op1 op op2
 -- op1, op2 are operands
 -- op is an operator: {+,-,*,/}

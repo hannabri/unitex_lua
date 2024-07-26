@@ -1,8 +1,12 @@
+-- Author: Hanna Brinkmann
+-- Levenshtein Distance source: https://gist.github.com/Badgerati/3261142
+-- llike functions source: PhD Thesis Cristian Martinez
+
+
 mois = {"janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "sepembre", "octobre", "novembre", "décembre"}
 jour = {"lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"}
 
 -- Returns the Levenshtein distance between the two given strings
--- Source: https://gist.github.com/Badgerati/3261142
 function levenshtein(cat, str2)
     distances = {}
 
